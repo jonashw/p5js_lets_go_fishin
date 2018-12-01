@@ -1,11 +1,12 @@
 var looping = true;
-var face;
+var fishes;
+
 
 function preload(){
-  face = {
-    on: loadImage('assets/face_on.png'),
-    off: loadImage('assets/face_off.png')
-  };
+  fishes = ['a','b','c','d','e'].map(color => ({
+    open :  loadImage(`assets/fish-${color}-open.png`),
+    closed: loadImage(`assets/fish-${color}-closed.png`)
+  }));
 }
 
 let colors = {};
@@ -17,6 +18,10 @@ function setup() {
     primaryB: color(228,255,114),
     secondary: color(145,75,85)
   };
+  ringColors = [
+    color(145,75,85),
+    color(228,255,114),
+  ]
   rectMode(CENTER); 
   angleMode(DEGREES);
 
@@ -80,6 +85,10 @@ let layers = (() => {
       thetas:[0, 60-q,60+q, 120, 180-q, 180+q, 240, 300-q, 300+q],
       bumps: [45-bumpLength, 180+45-bumpLength]
     }
+    ,{
+      thetas:[],
+      bumps: []
+    }
   ].map((l,i) => {
     l.id = i + 1;
     l.isOnBump = theta => {
@@ -92,35 +101,37 @@ let layers = (() => {
 
 let o = 0;
 function draw() { 
-  o+=0.25;
+  o+=0.50;
   let r = Math.min(width,height) / 16;
   let h = 1.7*r;
   var s = r * 2;
   background(colors.bg);
 
-  layers.forEach(layer => {
+  layers.forEach((layer,layerIndex) => {
     push();
     translate((width)/2, (height)/2);
     let layerR = 2*h*layer.id;
-    fill(layer.id % 2 == 0 ? colors.primaryB : colors.secondary);
-    stroke(255);
+    fill(ringColors[layerIndex % ringColors.length]);
+    noStroke();
     strokeWeight(2);
     arc(0, 0, layerR, layerR, 0, 360);
     pop();
 
     push();
     translate((width - s)/2, (height - s)/2);
-    layer.thetas.forEach(theta => {
+    layer.thetas.forEach((theta,thetaIndex) => {
       push();
       noStroke();
-      fill(colors.primaryA);
+      fill(colors.secondary);
       rotate(theta + o);
+      let fish = fishes[(thetaIndex) % fishes.length];
       let netTheta = (theta + o) % 360;
       let img = layer.isOnBump(netTheta)
-        ? face.on
-        : face.off;
+        ? fish.open
+        : fish.closed;
       translate(0,-h*layer.id);
       rotate(-(theta + o));
+      ellipse(s/2, 7*s/12, 5*s/4)
       image(img, 0, 0, s, s);
       //ellipse(000, 000, s);
       pop();
